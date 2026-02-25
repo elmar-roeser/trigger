@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [master]
+    tags: ["v*"]
   pull_request:
     branches: [master]
 
@@ -48,3 +49,23 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}*
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            trigger-macos-x86_64/trigger-macos-x86_64
+            trigger-macos-arm64/trigger-macos-arm64
+            trigger-windows-x86_64/trigger-windows-x86_64.exe
